@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="rate-review">
+    <h1>Rate and Review Our SHM Project</h1>
+    <form action="#" method="POST">
+        <label for="rating">Rate Us:</label>
+        <select id="rating" name="rating" required>
+            <option value="5">★★★★★ (Excellent)</option>
+            <option value="4">★★★★☆ (Good)</option>
+            <option value="3">★★★☆☆ (Average)</option>
+            <option value="2">★★☆☆☆ (Below Average)</option>
+            <option value="1">★☆☆☆☆ (Poor)</option>
+        </select>
+
+        <label for="review">Write a Review:</label>
+        <textarea id="review" name="review" rows="5" placeholder="Share your experience..." required></textarea>
+
+        <button type="submit">Submit Review</button>
+    </form>
+</section>
+{% endblock %}

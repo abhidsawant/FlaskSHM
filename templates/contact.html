@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="contact-section">
+    <h1>Contact Us</h1>
+    <p>If you have any questions about our SHM Bridge Fault Detection project, feel free to reach out. We'd love to hear from you!</p>
+
+    <form action="#" method="POST" class="contact-form">
+        <label for="name">Your Name</label>
+        <input type="text" id="name" name="name" placeholder="Enter your name" required>
+
+        <label for="email">Your Email</label>
+        <input type="email" id="email" name="email" placeholder="Enter your email" required>
+
+        <label for="message">Your Message</label>
+        <textarea id="message" name="message" rows="5" placeholder="Type your message here..." required></textarea>
+
+        <button type="submit" class="btn">Send Message</button>
+    </form>
+</section>
+
+<section class="contact-section1">
+    <h2>&#11088; Rate and Reviews :</h2>
+    <a href="http://127.0.0.1:5000/reviews" class="reviews-btn">Give Reviews</a>
+</section> 
+{% endblock %} 

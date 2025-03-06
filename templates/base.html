@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href='https://cdn.jsdelivr.net/npm/boxicons@2.0.5/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <title>SHM For Bridge</title>
+    <link rel="icon" href="/static/img/logo.jpg" type="image/jpg">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">
+            <a href="#">
+                <img src="/static/img/logo.jpg" alt="Logo">
+            </a>
+        </div>
+        <ul class="nav-links">
+            <li>
+                <a href="http://127.0.0.1:5000">Home</a>
+            </li>
+            <li>
+                <a href="http://127.0.0.1:5000/about">About Us</a>
+            </li>
+            <!-- <li>
+                <a href="http://127.0.0.1:5000/history">History Data</a>
+            </li> -->
+            <li>
+                <a href="http://127.0.0.1:5000/contact">Contact Us</a>
+            </li>
+            <li class="profile">
+                <a href="http://127.0.0.1:5000/profile"><i class='bx bx-user'></i></a>
+            </li>
+        </ul>
+
+    </nav>
+
+    <div class="content">
+        {% block content %}{% endblock %}
+    </div>
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="logo">
+            <a href="#">
+                <img src="/static/img/logo.jpg" alt="Logo">
+            </a>
+        </div>
+        <p>&copy; 2024-25 SHM Project | All Rights Reserved</p>
+        <p>Contributors :<span class="contributor">Prajyot More</span><span class="contributor">Abhishek Sawant</span><span class="contributor">Avadhut Patil</span><span class="contributor">Shaikh Malik</span></p>
+    </footer>
+</body>
+</html>

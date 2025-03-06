@@ -1,0 +1,477 @@
+body{
+    font-family: Arial, Helvetica, sans-serif;
+    padding: 0;
+    margin: 0;
+    background-color: whitesmoke;
+}
+
+
+/* base.html */
+.navbar {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #0077cc;
+    padding: 10px 20px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    transition: 0.5s;
+}
+
+.navbar:hover{
+    box-shadow: 10px 0px 12px black;
+}
+
+.logo img {
+    height: 50px;
+    border-radius: 20px;
+    object-fit: cover;
+}
+
+.logo img:hover{
+    box-shadow: 5px 5px 10px whitesmoke;
+}
+
+.nav-links {
+    list-style: none;
+    display: flex;
+    gap: 20px;
+}
+
+.nav-links li {
+    display: inline;
+}
+
+.nav-links a{
+    text-decoration: none;
+    font-size: larger;
+    font-weight: bold;
+    color: white;
+    transition: 0.5s;
+}
+
+.nav-links a:hover{
+    color: red;
+}
+
+.profile{
+    padding-left: 2rem;
+    font-size: larger;
+    font-weight: bolder;
+}
+
+
+/* Footer styling */
+.footer {
+    position: relative;
+    background: #0077cc;
+    color: white;
+    text-align: center;
+    padding: 15px 0;
+    font-size: 1em;
+    margin-top: 50px;
+    line-height: 1.5;
+    border-radius: 8px;
+}
+
+
+/* Contributor highlight */
+.contributor {
+    font-weight: bold;
+    color: #ffdd57;
+    padding: 2px 6px;
+    border-radius: 2px;
+    background: rgba(255, 221, 87, 0.2);
+    transition: background 0.3s ease;
+}
+
+.contributor:hover {
+    background: #ffdd57;
+    color: #0077cc;
+    cursor: pointer;
+}
+
+
+/* index.html */
+
+/* Slide from left to right animation */
+@keyframes slideRight {
+    from {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes  gradientMove {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Animated text styling */
+.animated-text {
+    text-align: center;
+    overflow: hidden;
+    white-space: nowrap;
+    padding-bottom: 10px;
+}
+
+.animated-text h1 {
+    font-size: 2.5em;
+    margin-bottom: 10px;
+    color: #f4c430;
+    display: inline-block;
+    text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+    animation: slideRight 2s ease-in-out;
+}
+
+/* hero image html */
+
+.hero{
+    position: relative;
+    width: 100%;
+    height: 300px;
+    margin-bottom: 1rem;
+    overflow: hidden;
+    border-radius: 8px;
+    box-shadow: 5px 0px 6px rgba(75, 74, 74, 0.7);
+    transition: 0.5s;
+}
+
+.hero:hover{
+    box-shadow: 10px 0px 12px rgba(75, 74, 74, 0.7);
+}
+
+.hero img{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.hero-text {
+    position: absolute;
+    top: 50%;
+    left: 10%;
+    transform: translateY(-50%);
+    color: white;
+    text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.7);
+}
+
+.hero-text h1 {
+    font-size: 3rem;
+    margin-bottom: 10px;
+}
+
+.hero-text p {
+    font-size: 1.2rem;
+    color: red;
+}
+
+.hero-text a {
+    color: red;
+    text-decoration: none;
+}
+
+.hero-text a:hover{
+    text-decoration: underline;
+}
+
+/* prediction form */
+
+#prediction-form{
+    max-width: 600px;
+    margin: auto;
+}
+
+#prediction-form  label, input{
+    display: block;
+    width: 100%;
+    margin-bottom: 10px; 
+}
+
+
+
+
+/* about.html */
+
+/* Fade-in animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.about-section {
+    background: white;
+    color: black;
+    padding: 50px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    max-width: 900px;
+    margin: 50px auto;
+    animation: fadeIn 1.2s ease-in-out;
+}
+
+.about-section h1 {
+    font-size: 2.5em;
+    text-align: center;
+    margin-bottom: 20px;
+    color: #0077cc;
+    padding-bottom: 10px;
+}
+
+.about-section h2 {
+    font-size: 2em;
+    margin-top: 30px;
+    margin-bottom: 15px;
+    color: #48e05f;
+}
+
+.about-section p {
+    font-size: 1.2em;
+    line-height: 1.8;
+    margin-bottom: 20px;
+}
+
+.about-section ul {
+    padding-left: 25px;
+    font-size: 1.1em;
+}
+
+.about-section li {
+    margin-bottom: 10px;
+    padding-left: 10px;
+    position: relative;
+}
+
+.about-section li::before {
+    content: "•";
+    color: #ffdd57;
+    font-size: 1.5em;
+    position: absolute;
+    left: -20px;
+    top: 0;
+}
+
+/* Button styles */
+.about-section .btn {
+    display: inline-block;
+    padding: 12px 25px;
+    background-color: #ffdd57;
+    color: #0077cc;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    text-decoration: none;
+    margin-top: 20px;
+    transition: background 0.3s ease;
+}
+
+.about-section .btn:hover {
+    background-color: #f4c430;
+}
+
+/* Contact Us Page Styling */
+.contact-section {
+    background: white;
+    color: #48e05f;
+    padding: 50px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    max-width: 800px;
+    margin: 50px auto;
+    animation: fadeIn 1.2s ease-in-out;
+}
+
+.contact-section h1 {
+    font-size: 2.5em;
+    text-align: center;
+    margin-bottom: 20px;
+    color: #0077cc;
+    padding-bottom: 10px;
+}
+
+.contact-section p {
+    color: black;
+    font-size: 1.2em;
+    line-height: 1.8;
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.contact-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.contact-form label {
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+.contact-form input,
+.contact-form textarea {
+    padding: 15px;
+    font-size: 1.1em;
+    border: none;
+    border-radius: 10px;
+    outline: none;
+    background-color: aliceblue;
+}
+
+.contact-form input:focus,
+.contact-form textarea:focus {
+    border: 2px solid #ffdd57;
+}
+
+.btn {
+    padding: 15px 20px;
+    background-color: #ffdd57;
+    color: #0077cc;
+    font-weight: bold;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 1.2em;
+    transition: background 0.3s ease;
+}
+
+.btn:hover {
+    background-color: #f4c430;
+}
+
+/* reviews btn style */
+
+.contact-section1 {
+    background: white;
+    color: #48e05f;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    max-width: 800px;
+    margin: 50px auto;
+    animation: fadeIn 1.2s ease-in-out;
+}
+
+.contact-section1 h2{
+    color: #48e05f;
+    font-size: 1.2em;
+    line-height: 1.8;
+    padding-bottom: 10px;
+}
+
+
+.reviews-btn{
+    padding: 15px 20px;
+    background-color: #ffdd57;
+    color: #0077cc;
+    font-weight: bold;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 1.2em;
+    transition: background 0.3s ease;
+    text-decoration: none;
+}
+
+.reviews-btn:hover {
+    background-color: #f4c430;
+}
+
+/* reviews.html page */
+
+.rate-review {
+    background: white;
+    color: #48e05f;
+    padding: 2rem;
+    margin: 2rem auto;
+    border-radius: 12px;
+    max-width: 600px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    animation: fadeIn 1.2s ease-in-out;
+}
+
+.rate-review h1 {
+    text-align: center;
+    color: #0077cc;
+    font-size: 1.5rem;
+}
+
+.rate-review label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+}
+
+.rate-review select, textarea, button {
+    width: 100%;
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+    border-radius: 8px;
+    border: none;
+    outline: none;
+    background-color: aliceblue;
+}
+
+.rate-review select:focus,
+.rate-review textarea:focus{
+    border: 2px solid #ffdd57;
+}
+
+.rate-review button {
+    background-color: #ffdd57;
+    color: #0077cc;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.rate-review button:hover {
+    background-color:#f4c430;
+}
+
+/* profile.html */
+
+.profile-section{
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 10px 2px 10px rgba(0, 0, 0, 0.1);
+    max-width: 600px;
+    margin: 20px auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.profile-section h1{
+    text-align: center;
+    color: #0077cc;
+}
+
+.profile-section h1 b{
+    color: #ffdd57;
+}
+
+.profile-section a{
+    display: inline-block;
+    padding: 10px 20px;
+    color: white;
+    background-color: #0077cc;
+    text-decoration: none;
+    border-radius: 5px;
+    margin-top: 20px;
+    text-align: center;
+}

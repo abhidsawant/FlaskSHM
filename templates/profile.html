@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <section class="profile-section">
+        <h1>Welcome <b>{{session['username']}}</b></h1>
+        <p><strong>Username:</strong> {{ session['username'] }}</p>
+        <a href="http://127.0.0.1:5000/logout" class="profile-a">Logout</a>
+    </section>
+{% endblock %} 
