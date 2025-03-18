@@ -3,6 +3,9 @@ from pymongo import MongoClient
 from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
 import os
+import joblib
+import pandas as pd
+import numpy as np
 
 # Load .env file
 load_dotenv()
@@ -16,7 +19,7 @@ client = MongoClient('mongodb://127.0.0.1:27017/')
 db = client['user_database']
 users = db['users']
 
-# route to check the mongodb connection:
+# Route to check the mongodb connection
 @app.route('/test_db')
 def test_db():
     try:
@@ -25,17 +28,24 @@ def test_db():
     except Exception as e:
         return f"Failed to connect to MongoDB: {e}"
 
-
-import joblib
-import pandas as pd
-
-# Load the model and scalers
-model = joblib.load('model/rf_bridge_model.pkl')
-scaler = joblib.load('model/scaler.pkl')
-label_encoders = joblib.load('model/label_encoders.pkl')
-
-# Categorical columns used in training
-categorical_columns = ["Material", "Weather_Conditions", "Material_Composition", "Bridge_Design", "Construction_Quality"]
+# Load the model and related files
+try:
+    model = joblib.load('model/rf_bridge_model.pkl')
+    scaler = joblib.load('model/scaler.pkl')
+    label_encoders = joblib.load('model/label_encoders.pkl')
+    selected_features = joblib.load('model/selected_features.pkl')
+    
+    # Try to load original column names if available
+    try:
+        original_column_names = joblib.load('model/original_column_names.pkl')
+        print(f"Loaded original column names: {original_column_names}")
+    except:
+        original_column_names = selected_features
+        print("Could not load original column names, using selected features instead")
+    
+    print(f"Model successfully loaded. Selected features: {selected_features}")
+except Exception as e:
+    print(f"Error loading model files: {e}")
 
 @app.route('/')
 def home():
@@ -46,25 +56,150 @@ def home():
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    try:
-        if not request.is_json:
-            return jsonify({"error": "Invalid content type. Please use 'application/json'."}), 415
-
-        data = request.get_json()
-        new_df = pd.DataFrame([data])
-
-        for col in categorical_columns:
-            if col in new_df.columns and col in label_encoders:
-                new_df[col] = label_encoders[col].transform(new_df[col])
-
-        new_data_scaled = scaler.transform(new_df)
-        prediction = model.predict(new_data_scaled)
-        result = "Collapsed" if prediction[0] == 1 else "Standing"
-
-        return jsonify({"prediction": result})
-
-    except Exception as e:
-        return jsonify({"error": str(e)})
+    if request.content_type.startswith('multipart/form-data'):
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file uploaded'}), 400
+        
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({'error': 'No selected file'}), 400
+        
+        try:
+            # Read the uploaded file
+            data = pd.read_csv(file)
+            
+            # Drop irrelevant columns if present
+            data = data.drop(columns=["Bridge_ID", "Collapse_Status", "Location"], errors='ignore')
+            
+            # Create a column mapping to handle potential naming differences
+            column_mapping = {}
+            for col in data.columns:
+                for orig_col in selected_features:
+                    # Compare normalized column names (lowercase, without spaces/special chars)
+                    col_norm = col.lower().replace(" ", "_").replace("(", "").replace(")", "").replace("_m", "").replace("_c", "")
+                    orig_norm = orig_col.lower().replace(" ", "_").replace("(", "").replace(")", "").replace("_m", "").replace("_c", "")
+                    
+                    if col_norm == orig_norm or col_norm in orig_norm or orig_norm in col_norm:
+                        column_mapping[col] = orig_col
+                        break
+            
+            # Apply column mapping
+            if column_mapping:
+                data = data.rename(columns=column_mapping)
+                print(f"Applied column mapping: {column_mapping}")
+            
+            # Check for missing features and add them with default values
+            missing_cols = set(selected_features) - set(data.columns)
+            if missing_cols:
+                print(f"Adding missing columns with default values: {missing_cols}")
+                for col in missing_cols:
+                    data[col] = 0  # Default value
+            
+            # Select and reorder columns to match the training data
+            try:
+                data = data[selected_features]
+            except KeyError as e:
+                print(f"KeyError when selecting features: {e}")
+                print(f"Available columns: {data.columns.tolist()}")
+                print(f"Required columns: {selected_features}")
+                return jsonify({'error': f'Column mismatch. Available: {data.columns.tolist()}, Required: {selected_features}'}), 400
+            
+            # Encode categorical variables
+            for col in label_encoders.keys():
+                if col in data.columns:
+                    try:
+                        data[col] = label_encoders[col].transform(data[col])
+                    except Exception as e:
+                        print(f"Error encoding column {col}: {e}")
+                        # Handle unknown categories gracefully
+                        data[col] = -1
+            
+            # Standardize numerical features
+            try:
+                data_scaled = scaler.transform(data)
+            except Exception as e:
+                print(f"Error in scaling: {e}")
+                return jsonify({'error': f'Scaling error: {str(e)}'}), 500
+            
+            # Predict
+            predictions = model.predict(data_scaled)
+            probabilities = model.predict_proba(data_scaled)[:, 1]  # Probability of collapse
+            
+            # Prepare results
+            results = []
+            for i, pred in enumerate(predictions):
+                results.append({
+                    'prediction': 'Collapsed' if pred == 1 else 'Standing',
+                    'collapse_probability': float(probabilities[i])
+                })
+            
+            return jsonify({
+                'success': True,
+                'predictions': results
+            })
+            
+        except Exception as e:
+            import traceback
+            print(f"Prediction error: {str(e)}")
+            print(traceback.format_exc())
+            return jsonify({'error': str(e)}), 500
+    
+    elif request.content_type == 'application/json':
+        # Handle JSON input for single prediction
+        try:
+            input_data = request.json
+            
+            # Create DataFrame from JSON input
+            df = pd.DataFrame([input_data])
+            
+            # Apply column mapping if needed
+            column_mapping = {}
+            for col in df.columns:
+                for orig_col in selected_features:
+                    col_norm = col.lower().replace(" ", "_").replace("(", "").replace(")", "").replace("_m", "").replace("_c", "")
+                    orig_norm = orig_col.lower().replace(" ", "_").replace("(", "").replace(")", "").replace("_m", "").replace("_c", "")
+                    
+                    if col_norm == orig_norm or col_norm in orig_norm or orig_norm in col_norm:
+                        column_mapping[col] = orig_col
+                        break
+            
+            if column_mapping:
+                df = df.rename(columns=column_mapping)
+            
+            # Add missing columns
+            for col in selected_features:
+                if col not in df.columns:
+                    df[col] = 0
+            
+            # Select only required features in the right order
+            df = df[selected_features]
+            
+            # Encode categorical variables
+            for col in label_encoders.keys():
+                if col in df.columns:
+                    try:
+                        df[col] = label_encoders[col].transform(df[col])
+                    except:
+                        df[col] = -1
+            
+            # Scale features
+            df_scaled = scaler.transform(df)
+            
+            # Predict
+            prediction = model.predict(df_scaled)[0]
+            probability = model.predict_proba(df_scaled)[0][1]
+            
+            return jsonify({
+                'success': True,
+                'prediction': 'Collapsed' if prediction == 1 else 'Standing',
+                'collapse_probability': float(probability)
+            })
+            
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+    
+    else:
+        return jsonify({'error': 'Invalid content type. Please use multipart/form-data or application/json.'}), 415
 
 
 # signup

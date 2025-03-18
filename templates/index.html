@@ -12,86 +12,76 @@
         </div>
     </section>
 
-    <h1>Bridge Collapse Prediction</h1>
-    <form id="prediction-form">
-        <label for="age">Age (years):</label>
-        <input type="number" id="age" name="Age (years)" required><br>
-
-        <label for="material">Material:</label>
-        <input type="text" id="material" name="Material" required><br>
-
-        <label for="length">Length (m):</label>
-        <input type="number" step="0.01" id="length" name="Length (m)" required><br>
-
-        <label for="width">Width (m):</label>
-        <input type="number" step="0.01" id="width" name="Width (m)" required><br>
-
-        <label for="height">Height (m):</label>
-        <input type="number" step="0.01" id="height" name="Height (m)" required><br>
-
-        <label for="traffic">Traffic Volume (vehicles/day):</label>
-        <input type="number" id="traffic" name="Traffic_Volume (vehicles/day)" required><br>
-
-        <label for="weather">Weather Conditions:</label>
-        <input type="text" id="weather" name="Weather_Conditions" required><br>
-
-        <label for="water_flow">Water Flow Rate (m³/s):</label>
-        <input type="number" step="0.01" id="water_flow" name="Water_Flow_Rate (m³/s)" required><br>
-
-        <label for="Maintenance_History">Maintenance_History:</label>
-        <input type="text" step="0.01" id="Maintenance_History" name="Maintenance_History" required><br>
-
-        <label for="stress">Stress (MPa):</label>
-        <input type="number" step="0.01" id="stress" name="Stress (MPa)" required><br>
-
-        <label for="strain">Strain (%):</label>
-        <input type="number" step="0.01" id="strain" name="Strain (%)" required><br>
-
-        <label for="tensile_strength">Tensile Strength (MPa):</label>
-        <input type="number" step="0.01" id="tensile_strength" name="Tensile_Strength (MPa)" required><br>
-
-        <label for="rainfall">Rainfall (mm):</label>
-        <input type="number" step="0.01" id="rainfall" name="Rainfall (mm)" required><br>
-
-        <label for="Material_Composition">Material_Composition:</label>
-        <input type="text" step="0.01" id="Material_Composition" name="Material_Composition" required><br>
-
-        <label for="bridge_design">Bridge Design:</label>
-        <input type="text" id="bridge_design" name="Bridge_Design" required><br>
-
-        <label for="construction_quality">Construction Quality:</label>
-        <input type="text" id="construction_quality" name="Construction_Quality" required><br>
-
-        <label for="temperature">Temperature (°C):</label>
-        <input type="number" step="0.01" id="temperature" name="Temperature (°C)" required><br>
-
-        <label for="humidity">Humidity (%):</label>
-        <input type="number" step="0.01" id="humidity" name="Humidity (%)" required><br>
-
-        <button type="submit">Predict</button>
-    </form>
-
-    <h2>Prediction: <span id="result"></span></h2>
-
+    <div class="container-pred">
+        <h1>Bridge Safety Prediction</h1>
+        <form id="upload-form" enctype="multipart/form-data">
+            <label for="file">Upload CSV file:</label>
+            <input type="file" id="file" name="file" accept=".csv" required>
+            <button type="submit">Predict</button>
+        </form>
+        <div id="results-container" style="margin-top: 20px;">
+            <div id="loading" style="display:none;">Processing...</div>
+            <div id="error-message" style="color: red;"></div>
+            <div id="result" style="font-size: 18px; font-weight: bold; margin-top: 15px;"></div>
+        </div>
+    </div>
+    
     <script>
-        document.getElementById('prediction-form').addEventListener('submit', async function(event) {
-            event.preventDefault();
-
-            let formData = {};
-            new FormData(this).forEach((value, key) => {
-                formData[key] = isNaN(value) ? value : parseFloat(value);
-            });
-
-            const response = await fetch('/predict', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(formData)
-            });
-
-            const data = await response.json();
-            document.getElementById('result').textContent = data.prediction || data.error;
+        document.getElementById('upload-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Show loading and reset previous results
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('error-message').innerText = '';
+            document.getElementById('result').innerText = '';
+            
+            // Get the file
+            const fileInput = document.getElementById('file');
+            if (!fileInput.files.length) {
+                document.getElementById('error-message').innerText = 'Please select a file';
+                document.getElementById('loading').style.display = 'none';
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                // Hide loading
+                document.getElementById('loading').style.display = 'none';
+                
+                if (result.error) {
+                    // Display error message
+                    document.getElementById('error-message').innerText = 'Error: ' + result.error;
+                } else if (result.success && result.predictions && result.predictions.length > 0) {
+                    // Get the first prediction only
+                    const prediction = result.predictions[0];
+                    const resultElement = document.getElementById('result');
+                    
+                    // Display simple result
+                    resultElement.innerText = `Bridge is ${prediction.prediction.toUpperCase()}`;
+                    
+                    // Color based on prediction
+                    if (prediction.prediction === 'Collapsed') {
+                        resultElement.style.color = 'red';
+                    } else {
+                        resultElement.style.color = 'green';
+                    }
+                } else {
+                    document.getElementById('error-message').innerText = 'No prediction results received';
+                }
+            } catch (error) {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error-message').innerText = 'Error: ' + error.message;
+            }
         });
     </script>
+
 {% endblock %} 

@@ -136,11 +136,12 @@ body{
     position: relative;
     width: 100%;
     height: 300px;
-    margin-bottom: 1rem;
+    margin-bottom: 2rem;
     overflow: hidden;
     border-radius: 8px;
     box-shadow: 5px 0px 6px rgba(75, 74, 74, 0.7);
     transition: 0.5s;
+
 }
 
 .hero:hover{
@@ -181,21 +182,71 @@ body{
     text-decoration: underline;
 }
 
-/* prediction form */
+/* prediction layout */
 
-#prediction-form{
-    max-width: 600px;
+.container-pred{
+    width: 70%;
+    height: 300px;
     margin: auto;
+    padding: 2rem;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
 
-#prediction-form  label, input{
-    display: block;
-    width: 100%;
-    margin-bottom: 10px; 
+.container-pred h1{
+    font-size: 3rem;
+    color: #0077cc;
 }
 
+.container-pred label{
+    color: #48e05f;
+    font-weight: bold;
+}
 
+.container-pred input[type="file"] {
+    padding: 10px;
+    /* border: 2px solid #007bff; */
+    border-radius: 8px;
+    background-color: #f8f9fa;
+    color: #007bff;
+    cursor: pointer;
+    font-size: 16px;
+  }
+  
+  .container-pred input[type="file"]::-webkit-file-upload-button {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+ .container-pred input[type="file"]::-webkit-file-upload-button:hover {
+    background-color: #0056b3;
+  }
+  
 
+.container-pred button{
+    padding: 12px 25px;
+    background-color: #ffdd57;
+    color: #0077cc;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    text-decoration: none;
+    margin-top: 20px;
+    transition: background 0.3s ease;
+    font-size: larger;
+}
+
+.container-pred button:hover{
+    background-color: #f4c430;
+}
 
 /* about.html */
 
