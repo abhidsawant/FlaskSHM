@@ -6,6 +6,10 @@ import os
 import joblib
 import pandas as pd
 import numpy as np
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 # Load .env file
 load_dotenv()
@@ -14,14 +18,28 @@ app = Flask(__name__)
 SECRET_KEY = os.urandom(24).hex()  # Generate a random secret key
 app.secret_key = os.getenv('SECRET_KEY', SECRET_KEY)
 
-# Connect to MongoDB using environment variables
+# Connect to MongoDB using environment variables with proper timeout settings
 mongodb_uri = os.getenv('MONGODB_URI', 'mongodb://127.0.0.1:27017/')
 db_name = os.getenv('MONGODB_DB', 'user_database')
 
-# Connect to MongoDB
-client = MongoClient(mongodb_uri)
-db = client[db_name]
-users = db['users']
+# Connect to MongoDB with proper timeout settings
+try:
+    client = MongoClient(
+        mongodb_uri,
+        serverSelectionTimeoutMS=5000,    # 5 second timeout for server selection
+        connectTimeoutMS=5000,            # 5 second timeout for initial connection
+        socketTimeoutMS=5000              # 5 second timeout for socket operations
+    )
+    # Test connection immediately to verify it works
+    client.admin.command('ping')
+    logging.info("MongoDB connection successful")
+    db = client[db_name]
+    users = db['users']
+except Exception as e:
+    logging.error(f"MongoDB connection failed: {e}")
+    client = None
+    db = None
+    users = None
 
 # Route to check the mongodb connection
 @app.route('/test_db')
@@ -31,7 +49,6 @@ def test_db():
         return "MongoDB connection successful!"
     except Exception as e:
         return f"Failed to connect to MongoDB: {e}"
-
 
 # Load the model and related files
 try:
@@ -43,14 +60,18 @@ try:
     # Try to load original column names if available
     try:
         original_column_names = joblib.load('model/original_column_names.pkl')
-        print(f"Loaded original column names: {original_column_names}")
+        logging.info(f"Loaded original column names: {original_column_names}")
     except:
         original_column_names = selected_features
-        print("Could not load original column names, using selected features instead")
+        logging.info("Could not load original column names, using selected features instead")
     
-    print(f"Model successfully loaded. Selected features: {selected_features}")
+    logging.info(f"Model successfully loaded. Selected features: {selected_features}")
 except Exception as e:
-    print(f"Error loading model files: {e}")
+    logging.error(f"Error loading model files: {e}")
+    model = None
+    scaler = None
+    label_encoders = None
+    selected_features = None
 
 @app.route('/')
 def home():
@@ -61,6 +82,9 @@ def home():
 
 @app.route('/predict', methods=['POST'])
 def predict():
+    if not model or not scaler or not label_encoders or not selected_features:
+        return jsonify({'error': 'Model not properly loaded'}), 500
+        
     if request.content_type.startswith('multipart/form-data'):
         if 'file' not in request.files:
             return jsonify({'error': 'No file uploaded'}), 400
@@ -91,12 +115,12 @@ def predict():
             # Apply column mapping
             if column_mapping:
                 data = data.rename(columns=column_mapping)
-                print(f"Applied column mapping: {column_mapping}")
+                logging.info(f"Applied column mapping: {column_mapping}")
             
             # Check for missing features and add them with default values
             missing_cols = set(selected_features) - set(data.columns)
             if missing_cols:
-                print(f"Adding missing columns with default values: {missing_cols}")
+                logging.info(f"Adding missing columns with default values: {missing_cols}")
                 for col in missing_cols:
                     data[col] = 0  # Default value
             
@@ -104,9 +128,9 @@ def predict():
             try:
                 data = data[selected_features]
             except KeyError as e:
-                print(f"KeyError when selecting features: {e}")
-                print(f"Available columns: {data.columns.tolist()}")
-                print(f"Required columns: {selected_features}")
+                logging.error(f"KeyError when selecting features: {e}")
+                logging.error(f"Available columns: {data.columns.tolist()}")
+                logging.error(f"Required columns: {selected_features}")
                 return jsonify({'error': f'Column mismatch. Available: {data.columns.tolist()}, Required: {selected_features}'}), 400
             
             # Encode categorical variables
@@ -115,7 +139,7 @@ def predict():
                     try:
                         data[col] = label_encoders[col].transform(data[col])
                     except Exception as e:
-                        print(f"Error encoding column {col}: {e}")
+                        logging.warning(f"Error encoding column {col}: {e}")
                         # Handle unknown categories gracefully
                         data[col] = -1
             
@@ -123,7 +147,7 @@ def predict():
             try:
                 data_scaled = scaler.transform(data)
             except Exception as e:
-                print(f"Error in scaling: {e}")
+                logging.error(f"Error in scaling: {e}")
                 return jsonify({'error': f'Scaling error: {str(e)}'}), 500
             
             # Predict
@@ -145,8 +169,8 @@ def predict():
             
         except Exception as e:
             import traceback
-            print(f"Prediction error: {str(e)}")
-            print(traceback.format_exc())
+            logging.error(f"Prediction error: {str(e)}")
+            logging.error(traceback.format_exc())
             return jsonify({'error': str(e)}), 500
     
     elif request.content_type == 'application/json':
@@ -201,6 +225,7 @@ def predict():
             })
             
         except Exception as e:
+            logging.error(f"JSON prediction error: {str(e)}")
             return jsonify({'error': str(e)}), 500
     
     else:
@@ -214,17 +239,27 @@ def signup():
         username = request.form['username']
         password = request.form['password']
 
-        if users.find_one({'username': username}):
-            flash('Username already exists. Please choose a different one.')
+        try:
+            # Check with timeout if username exists
+            existing_user = users.find_one({'username': username}, max_time_ms=5000)
+            
+            if existing_user:
+                flash('Username already exists. Please choose a different one.')
+                return redirect(url_for('signup'))
+
+            hashed_password = generate_password_hash(password)
+            # Add timeout for insert operation
+            users.insert_one({'username': username, 'password': hashed_password}, max_time_ms=5000)
+
+            # Log the user in (store in session)
+            session['username'] = username
+            flash('Signup successful! Welcome to the home page.')
+            return redirect(url_for('home'))
+            
+        except Exception as e:
+            logging.error(f"Database error during signup: {str(e)}")
+            flash('An error occurred during signup. Please try again later.')
             return redirect(url_for('signup'))
-
-        hashed_password = generate_password_hash(password)
-        users.insert_one({'username': username, 'password': hashed_password})
-
-        # Log the user in (store in session)
-        session['username'] = username
-        flash('Signup successful! Welcome to the home page.')
-        return redirect(url_for('home'))
 
     return render_template('signup.html')
 
@@ -235,14 +270,21 @@ def login():
         username = request.form['username']
         password = request.form['password']
 
-        user = users.find_one({'username': username})
-        if user and check_password_hash(user['password'], password):
-            session['username'] = username
-            flash('Login successful! Welcome to the home page.')
-            return redirect(url_for('home'))
-        else:
-            flash('Invalid username or password. Please try again.')
-
+        try:
+            # Add timeout to database query
+            user = users.find_one({'username': username}, max_time_ms=5000)
+            
+            if user and check_password_hash(user['password'], password):
+                session['username'] = username
+                flash('Login successful! Welcome to the home page.')
+                return redirect(url_for('home'))
+            else:
+                flash('Invalid username or password. Please try again.')
+                
+        except Exception as e:
+            logging.error(f"Database error during login: {str(e)}")
+            flash('An error occurred. Please try again later.')
+            
     return render_template('login.html')
 
 # logout route:
@@ -267,7 +309,14 @@ def contact():
 @app.route('/profile')
 def profile():
     if 'username' in session:
-        return render_template('profile.html')
+        try:
+            # Add timeout to any potential database queries
+            user_data = users.find_one({'username': session['username']}, max_time_ms=5000)
+            return render_template('profile.html', user_data=user_data)
+        except Exception as e:
+            logging.error(f"Error retrieving profile data: {str(e)}")
+            flash('Error loading profile data. Please try again later.')
+            return redirect(url_for('home'))
     else:
         flash('Please log in to view your profile.')
         return redirect(url_for('login'))
@@ -276,9 +325,16 @@ def profile():
 def reviews():
     return render_template('reviews.html')
 
-if __name__ == '__main__':
-    app.run(debug=True)
-# Your other routes and application code here...
+# Error handler for MongoDB connection issues
+@app.errorhandler(500)
+def server_error(error):
+    logging.error(f"Server error: {error}")
+    return render_template('error.html', error="Database connection error. Please try again later."), 500
 
-# if __name__ == '__main__':
-#     app.run(host='0.0.0.0', port=int(os.getenv('PORT', 10000)))
+if __name__ == '__main__':
+    # Use environment variables for host and port with reasonable defaults
+    host = os.getenv('HOST', '0.0.0.0')
+    port = int(os.getenv('PORT', 5000))
+    debug = os.getenv('FLASK_ENV') == 'development'
+    
+    app.run(host=host, port=port, debug=debug)
