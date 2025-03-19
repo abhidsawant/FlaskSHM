@@ -276,9 +276,9 @@ def profile():
 def reviews():
     return render_template('reviews.html')
 
-# if __name__ == '__main__':
-#     app.run(debug=True)
+if __name__ == '__main__':
+    app.run(debug=True)
 # Your other routes and application code here...
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.getenv('PORT', 10000)))
+# if __name__ == '__main__':
+#     app.run(host='0.0.0.0', port=int(os.getenv('PORT', 10000)))
