@@ -14,10 +14,12 @@ app = Flask(__name__)
 SECRET_KEY = os.urandom(24).hex()  # Generate a random secret key
 app.secret_key = os.getenv('SECRET_KEY', SECRET_KEY)
 
-# Connect to MongoDB using environment variable
+# Connect to MongoDB using environment variables
 mongodb_uri = os.getenv('MONGODB_URI', 'mongodb://127.0.0.1:27017/')
-client = MongoClient(mongodb_uri)
 db_name = os.getenv('MONGODB_DB', 'user_database')
+
+# Connect to MongoDB
+client = MongoClient(mongodb_uri)
 db = client[db_name]
 users = db['users']
 
@@ -29,6 +31,7 @@ def test_db():
         return "MongoDB connection successful!"
     except Exception as e:
         return f"Failed to connect to MongoDB: {e}"
+
 
 # Load the model and related files
 try:
@@ -273,5 +276,9 @@ def profile():
 def reviews():
     return render_template('reviews.html')
 
+# if __name__ == '__main__':
+#     app.run(debug=True)
+# Your other routes and application code here...
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=int(os.getenv('PORT', 10000)))
