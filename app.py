@@ -14,9 +14,11 @@ app = Flask(__name__)
 SECRET_KEY = os.urandom(24).hex()  # Generate a random secret key
 app.secret_key = os.getenv('SECRET_KEY', SECRET_KEY)
 
-# Connect to MongoDB
-client = MongoClient('mongodb://127.0.0.1:27017/')
-db = client['user_database']
+# Connect to MongoDB using environment variable
+mongodb_uri = os.getenv('MONGODB_URI', 'mongodb://127.0.0.1:27017/')
+client = MongoClient(mongodb_uri)
+db_name = os.getenv('MONGODB_DB', 'user_database')
+db = client[db_name]
 users = db['users']
 
 # Route to check the mongodb connection
