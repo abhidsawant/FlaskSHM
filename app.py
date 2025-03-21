@@ -240,25 +240,26 @@ def signup():
         password = request.form['password']
 
         try:
-            # Check with timeout if username exists
+            # Check if the username exists with a timeout
             existing_user = users.find_one({'username': username}, max_time_ms=5000)
             
             if existing_user:
-                flash('Username already exists. Please choose a different one.')
+                flash('Username already exists. Please choose a different one.', 'error')
                 return redirect(url_for('signup'))
 
             hashed_password = generate_password_hash(password)
-            # Add timeout for insert operation
-            users.insert_one({'username': username, 'password': hashed_password}, max_time_ms=5000)
+
+            # Insert user into the database (without max_time_ms, as it's not valid here)
+            users.insert_one({'username': username, 'password': hashed_password})
 
             # Log the user in (store in session)
             session['username'] = username
-            flash('Signup successful! Welcome to the home page.')
+            flash('Signup successful! Welcome to the home page.', 'success')
             return redirect(url_for('home'))
             
         except Exception as e:
             logging.error(f"Database error during signup: {str(e)}")
-            flash('An error occurred during signup. Please try again later.')
+            flash('An error occurred during signup. Please try again later.', 'error')
             return redirect(url_for('signup'))
 
     return render_template('signup.html')
