@@ -295,6 +295,10 @@ def logout():
     flash('You have been logged out.')
     return redirect(url_for('login'))
 
+@app.route('/detect')
+def detect():
+    return render_template('detect.html')
+
 @app.route('/about')
 def about():
     return render_template('about.html')
