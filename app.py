@@ -340,6 +340,7 @@ def profile():
         flash('Please log in to view your profile.')
         return redirect(url_for('login'))
 
+
 @app.route('/reviews',methods=['GET','POST'])
 def reviews():
     if request.method == 'POST':
