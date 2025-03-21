@@ -35,6 +35,8 @@ try:
     logging.info("MongoDB connection successful")
     db = client[db_name]
     users = db['users']
+    contacts = db['contacts']
+    reviews = db['reviews'] 
 except Exception as e:
     logging.error(f"MongoDB connection failed: {e}")
     client = None
@@ -307,8 +309,20 @@ def about():
 def history():
     return render_template('history.html')
 
-@app.route('/contact')
+@app.route('/contact',methods=['GET','POST'])
 def contact():
+    if request.method == 'POST':
+            name = request.form['name']
+            email = request.form['email']
+            message = request.form['message']
+
+            try:
+                contacts.insert_one({'name': name, 'email': email, 'message': message})
+                flash('Your message has been sent successfully!', 'success')
+            except Exception as e:
+                logging.error(f"Database error while saving contact form: {str(e)}")
+                flash('An error occurred. Please try again later.', 'error')
+
     return render_template('contact.html')
 
 @app.route('/profile')
@@ -326,8 +340,27 @@ def profile():
         flash('Please log in to view your profile.')
         return redirect(url_for('login'))
 
-@app.route('/reviews')
+@app.route('/reviews',methods=['GET','POST'])
 def reviews():
+    if request.method == 'POST':
+        rating = request.form['rating']
+        review_text = request.form['review']
+
+        if not (rating and review_text):
+            flash("Please provide both a rating and a review.", "error")
+            return redirect(url_for('reviews_page'))
+
+        try:
+            review_data = {
+                'rating': int(rating),
+                'review': review_text
+            }
+            reviews.insert_one(review_data)
+            flash("Review submitted successfully!", "success")
+            return redirect(url_for('reviews_page'))
+        except Exception as e:
+            logging.error(f"Error saving review: {str(e)}")
+            flash("An error occurred. Try again later.", "error")
     return render_template('reviews.html')
 
 # Error handler for MongoDB connection issues
